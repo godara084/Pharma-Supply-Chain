@@ -12,9 +12,13 @@ import {
 } from "@mui/material";
 import React from "react";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
+import { useContext } from "react";
+import { UserContext } from "../../context/UserContext";
 
 const Login = () => {
+  const navigate = useNavigate();
   const [data, setData] = useState({
     username: { value: "", title: "Username", type: "text" },
     password: { value: "", title: "Password", type: "password" },
@@ -25,7 +29,10 @@ const Login = () => {
     "Retailer",
     "Customer",
   ]);
-  const [opt, setOpt] = useState(options[0]);
+  const [opt, setOpt] = useState(options[0].toLowerCase());
+  const [error, setError] = useState("");
+  const [disabled, setDisabled] = useState(false);
+  const [user, setUser] = useContext(UserContext);
 
   const handleChange = (e) => {
     setData((prev) => {
@@ -35,7 +42,22 @@ const Login = () => {
     });
   };
 
-  const handleLogin = () => {};
+  const handleLogin = async () => {
+    setDisabled(true);
+    try {
+      const res = await axios.post("/auth/signin", {
+        username: data.username.value,
+        password: data.password.value,
+        role: opt,
+      });
+      const u = await axios.post("/auth/user");
+      setUser(u.data);
+      navigate(`/${opt}`);
+    } catch (e) {
+      setError(e.message);
+    }
+    setDisabled(false);
+  };
 
   const handleChangeOptions = (e) => {
     setOpt(e.target.value);
@@ -74,6 +96,7 @@ const Login = () => {
               width: "100%",
             })}
             variant="standard"
+            disabled={disabled}
           />
         ))}{" "}
         <FormControl sx={{ mt: 2, width: "100%" }}>
@@ -84,10 +107,11 @@ const Login = () => {
             label="Login As"
             value={opt}
             onChange={handleChangeOptions}
+            disabled={disabled}
             sx={{ width: "100%" }}
           >
             {options.map((m, idx) => (
-              <MenuItem key={idx} value={m}>
+              <MenuItem key={idx} value={m.toLowerCase()}>
                 {m}
               </MenuItem>
             ))}

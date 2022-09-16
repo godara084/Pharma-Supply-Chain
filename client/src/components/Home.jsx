@@ -1,8 +1,11 @@
 import { alpha, Box, Button, Container, Typography } from "@mui/material";
 import React from "react";
+import { useContext } from "react";
 import { Link } from "react-router-dom";
+import { UserContext } from "../context/UserContext";
 
 const Home = () => {
+  const [user, setUser] = useContext(UserContext);
   return (
     <Box
       width={"100vw"}
@@ -22,16 +25,24 @@ const Home = () => {
           Welcome to the Demonstration!
         </Typography>
         <Box display="flex" justifyContent={"space-around"} sx={{ mt: 15 }}>
-          <Link to="/login" style={{ textDecoration: "none" }}>
-            <Button variant="contained" sx={{ px: 5, py: 3 }}>
-              Login
-            </Button>
-          </Link>
-          <Link to="/signup" style={{ textDecoration: "none" }}>
-            <Button variant="contained" sx={{ px: 5, py: 3 }}>
-              Sign Up
-            </Button>
-          </Link>
+          {user._id ? (
+            <Link to={`/${user.role}`}>
+              <Button sx={{ px: 5, py: 3 }}>Go to dashboard</Button>
+            </Link>
+          ) : (
+            <>
+              <Link to="/login" style={{ textDecoration: "none" }}>
+                <Button variant="contained" sx={{ px: 5, py: 3 }}>
+                  Login
+                </Button>
+              </Link>
+              <Link to="/signup" style={{ textDecoration: "none" }}>
+                <Button variant="contained" sx={{ px: 5, py: 3 }}>
+                  Sign Up
+                </Button>
+              </Link>
+            </>
+          )}
         </Box>
       </Container>
     </Box>

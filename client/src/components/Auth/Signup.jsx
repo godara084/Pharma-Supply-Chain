@@ -12,9 +12,13 @@ import {
 } from "@mui/material";
 import React from "react";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
+import { useContext } from "react";
+import { UserContext } from "../../context/UserContext";
 
 const Signup = () => {
+  const navigate = useNavigate();
   const [data, setData] = useState({
     name: { value: "", title: "Name", type: "text" },
     username: { value: "", title: "Username", type: "text" },
@@ -27,7 +31,10 @@ const Signup = () => {
     "Retailer",
     "Customer",
   ]);
-  const [opt, setOpt] = useState(options[0]);
+  const [opt, setOpt] = useState(options[0].toLowerCase());
+  const [error, setError] = useState("");
+  const [disable, setDisable] = useState(false);
+  const [user, setUser] = useContext(UserContext);
 
   const handleChange = (e) => {
     setData((prev) => {
@@ -37,8 +44,34 @@ const Signup = () => {
     });
   };
 
-  const handleSignup = () => {
+  const handleSignup = async () => {
     // check for password === cnfPassword
+    setDisable(true);
+    console.log(data.password, data.cnfPassword);
+    if (data.password.value !== data.cnfPassword.value) {
+      setError("Password and Confirm Password dont match!");
+      setDisable(false);
+      return;
+    }
+    setError("");
+    try {
+      const res = await axios.post("/auth/signup", {
+        name: data.name.value,
+        username: data.username.value,
+        password: data.password.value,
+        role: opt,
+      });
+      setUser({
+        ...res.data,
+        name: data.name.value,
+        username: data.username.value,
+        role: opt,
+      });
+      navigate(`/${opt}`);
+    } catch (e) {
+      setError(e.message);
+      setDisable(false);
+    }
   };
 
   const handleChangeOptions = (e) => {
@@ -70,6 +103,7 @@ const Signup = () => {
             name={k}
             value={data[k].value}
             type={data[k].type}
+            disabled={disable}
             label={data[k].title}
             onChange={handleChange}
             key={k}
@@ -89,14 +123,16 @@ const Signup = () => {
             value={opt}
             onChange={handleChangeOptions}
             sx={{ width: "100%" }}
+            disabled={disable}
           >
             {options.map((m, idx) => (
-              <MenuItem key={idx} value={m}>
+              <MenuItem key={idx} value={m.toLowerCase()}>
                 {m}
               </MenuItem>
             ))}
           </Select>
         </FormControl>
+        {error && <Typography color="error">{error}</Typography>}
         <Button
           variant="contained"
           onClick={handleSignup}
